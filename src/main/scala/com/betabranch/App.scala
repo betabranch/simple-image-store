@@ -56,7 +56,19 @@ class App extends unfiltered.filter.Plan with Template {
       val expected = for {
         href <- lookup("href") is
           required("missing href")
-      } yield Ok ~> Json(('id.name -> storeImage(fetchImage(href.get)).getKeyString))
+        height <- lookup("h") //TODO: should test if it is Int
+        width <- lookup("w")
+      } yield {
+        var image = fetchImage(href.get)
+        (!height.isEmpty && !width.isEmpty) match {
+          case true =>
+            //do resize
+            val resize = ImagesServiceFactory.makeResize(height.get.toInt, width.get.toInt)
+            image = imageService.applyTransform(resize, image) 
+          case _ =>
+        }
+        Ok ~> Json(('id.name -> storeImage(image).getKeyString))
+      }
       expected(params) orFail { fails =>
         Ok ~> Json('error.name -> fails.head.toString)
       }

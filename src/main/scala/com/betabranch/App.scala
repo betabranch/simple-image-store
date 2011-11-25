@@ -12,7 +12,6 @@ import net.liftweb.json.JsonDSL._
 import net.liftweb.json.JsonParser._
 import scala.collection.JavaConversions._
 
-/** unfiltered plan */
 class App extends unfiltered.filter.Plan with Template {
   import QParams._
   
@@ -21,14 +20,10 @@ class App extends unfiltered.filter.Plan with Template {
   lazy val urlFetchService = URLFetchServiceFactory.getURLFetchService
   lazy val fileService = FileServiceFactory.getFileService
   
-  def fetchImage(href: String) = {
-    val imageURL = new java.net.URL(href)
-    val response = urlFetchService.fetchAsync(imageURL)
-    ImagesServiceFactory.makeImage(response.get.getContent)
-  }
+  def fetchImage(href: String) =
+    ImagesServiceFactory.makeImage(urlFetchService.fetchAsync(new java.net.URL(href)).get.getContent)
   
   def storeImage(image: Image) = {
-    println("image/%s" format image.getFormat)
     var file = fileService.createNewBlobFile("image/%s" format image.getFormat)
     var writeChannel = fileService.openWriteChannel(file, true)
     writeChannel.write(java.nio.ByteBuffer.wrap(image.getImageData))
@@ -37,10 +32,7 @@ class App extends unfiltered.filter.Plan with Template {
     fileService.getBlobKey(file)
   }
   
-  def deleteBlobs = {
-     val iterator = new BlobInfoFactory().queryBlobInfos
-     iterator foreach { bi => blobstoreService.delete(bi.getBlobKey) }
-  }
+  def deleteBlobs = new BlobInfoFactory().queryBlobInfos foreach { bi => blobstoreService.delete(bi.getBlobKey) }
   
   def intent = {
     case req @ GET(Path("/")) =>
@@ -56,8 +48,10 @@ class App extends unfiltered.filter.Plan with Template {
       val expected = for {
         href <- lookup("href") is
           required("missing href")
-        height <- lookup("h") //TODO: should test if it is Int
-        width <- lookup("w")
+        height <- lookup("h") is 
+            int { s => "'%s' is not an integer".format(s) }
+        width <- lookup("w") is
+            int { s => "'%s' is not an integer".format(s) }
       } yield {
         var image = fetchImage(href.get)
         (!height.isEmpty && !width.isEmpty) match {

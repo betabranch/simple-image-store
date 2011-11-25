@@ -16,8 +16,6 @@ libraryDependencies ++= Seq(
   "com.google.appengine" % "appengine-api-labs" % "1.5.4",
   "net.sf.jsr107cache" % "jsr107cache" % "1.1",
   "com.google.appengine" % "appengine-tools-sdk" % "1.5.4",
-  "com.googlecode.objectify" % "objectify" % "3.0",
-  "javax.persistence" % "persistence-api" % "1.0"
 ) ++ Seq( // local testing
   "javax.servlet" % "servlet-api" % "2.3" % "provided",
   "org.eclipse.jetty" % "jetty-webapp" % "7.4.5.v20110725" % "jetty"
